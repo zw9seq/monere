@@ -1,0 +1,12 @@
+services:
+  monere:
+    build: .
+    container_name: monere_app
+    network_mode: "host"
+    volumes:
+      - ./data:/app/data
+      - ./oui.json:/app/data/oui.json
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    restart: unless-stopped

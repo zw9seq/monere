@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Redes registradas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #1c1f25;
+      background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.08) 1px, transparent 0);
+      background-size: 40px 40px;
+    }
+  </style>
+</head>
+<body class="text-gray-100 min-h-screen">
+
+  <div class="container mx-auto py-8 px-4">
+
+    <!-- CABECERA -->
+    <div class="flex flex-col items-center justify-center mb-12 mt-6 text-center">
+      <h1 class="text-6xl font-extrabold text-yellow-400 tracking-wider drop-shadow-[0_0_15px_rgba(255,204,0,0.7)] animate-pulse [animation-duration:3.5s]">
+        Monere
+      </h1>
+      <p class="text-gray-400 mt-2 text-sm uppercase tracking-[0.25em]">
+        Monitorización de redes locales
+      </p>
+    </div>
+
+    <!-- FORMULARIO CREAR NUEVA RED -->
+    <div class="bg-gray-800 p-6 rounded-2xl shadow-lg mb-10 border border-gray-700">
+      <h2 class="text-2xl font-semibold text-yellow-400 mb-4">Crear nueva red</h2>
+
+      <form id="createForm" action="/networks/create" method="post" onsubmit="return validateCreateForm()" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <label class="block text-gray-300 text-sm mb-1">Nombre</label>
+          <input type="text" name="name" placeholder="Ej: Oficina"
+            class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-gray-100 focus:border-yellow-400 focus:outline-none"
+            required>
+        </div>
+        <div>
+          <label class="block text-gray-300 text-sm mb-1">Rango CIDR</label>
+          <input id="createCidr" type="text" name="cidr" placeholder="Ej: 192.168.1.0/24"
+            class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-gray-100 focus:border-yellow-400 focus:outline-none"
+            required>
+          <p id="createCidrError" class="hidden text-red-400 text-sm mt-1">Formato CIDR no válido (ej: 192.168.1.0/24)</p>
+        </div>
+        <div class="flex items-end">
+          <button type="submit"
+            class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-semibold px-4 py-2 rounded-lg transition">
+            Crear red
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- LISTADO DE REDES -->
+    <main class="flex-grow p-6">
+      <h2 class="text-2xl font-semibold text-yellow-400 mb-4">Redes existentes</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for net_id, net in networks.items() %}
+        <div class="relative group bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-2xl p-5 shadow-md transition transform hover:scale-[1.02]">
+          <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition flex gap-2">
+            <button aria-label="Editar red" onclick="openEditModal('{{ net_id|tojson }}', '{{ net.name|tojson }}', '{{ net.cidr|tojson }}')" class="text-blue-400 hover:text-blue-300 text-sm">✏️</button>
+            <button aria-label="Eliminar red" onclick="openDeleteModal('{{ net_id }}', '{{ net.name|escape }}')" class="text-red-400 hover:text-red-300 text-sm">🗑️</button>
+          </div>
+
+          <div onclick="window.location.href='/network/{{ net_id }}'" class="cursor-pointer">
+            <h3 class="text-xl font-semibold text-yellow-400 mb-2">{{ net.name }}</h3>
+            <div class="text-sm text-gray-400 space-y-1">
+              <p><strong class="text-gray-300">Rango:</strong> {{ net.cidr }}</p>
+              <p><strong class="text-gray-300">Dispositivos:</strong> {{ net.device_count or 0 }}</p>
+              <p><strong class="text-gray-300">Último escaneo:</strong> {{ net.last_scan or 'Nunca' }}</p>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </main>
+
+    <!-- Modal editar red -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50" onclick="closeIfBackdrop(event, 'editModal')">
+      <div class="bg-gray-800 p-6 rounded-xl shadow-lg w-96" onclick="event.stopPropagation()">
+        <h3 class="text-xl text-yellow-400 font-semibold mb-4">Editar red</h3>
+        <form id="editForm" method="post" onsubmit="return validateEditForm()">
+          <div class="mb-3">
+            <label class="block text-gray-300 text-sm mb-1">Nombre</label>
+            <input id="editName" name="name" type="text" required
+                   class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-gray-100 focus:border-yellow-400 focus:outline-none">
+          </div>
+          <div class="mb-3">
+            <label class="block text-gray-300 text-sm mb-1">CIDR</label>
+            <input id="editCidr" name="cidr" type="text" required
+                   class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-gray-100 focus:border-yellow-400 focus:outline-none">
+            <p id="cidrError" class="hidden text-red-400 text-sm mt-1">Formato CIDR no válido (ej: 192.168.1.0/24)</p>
+          </div>
+          <div class="flex justify-end gap-2 mt-4">
+            <button type="button" onclick="closeEditModal()" class="px-3 py-1 rounded-lg bg-gray-600 hover:bg-gray-500 text-gray-200">Cancelar</button>
+            <button type="submit" class="px-3 py-1 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-black font-semibold">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal eliminar red -->
+    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50" onclick="closeIfBackdrop(event, 'deleteModal')">
+      <div class="bg-gray-800 p-6 rounded-xl shadow-lg w-80 text-center" onclick="event.stopPropagation()">
+        <h3 class="text-lg font-semibold text-red-400 mb-4">Eliminar red</h3>
+        <p class="text-gray-300 mb-6">¿Seguro que deseas eliminar la red <span id="deleteNetName" class="font-semibold text-yellow-400"></span>?</p>
+        <form id="deleteForm" method="post">
+          <div class="flex justify-center gap-3">
+            <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-500 text-gray-200">Cancelar</button>
+            <button type="submit" class="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-400 text-black font-semibold">Eliminar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+
+      // Enviar keepalive cada 2 minutos para mantener la sesión activa
+      setInterval(() => {
+        fetch("/keepalive").catch(() => {});
+      }, 120000);
+
+      // ===== Validación CIDR (creación y edición) =====
+      const cidrPattern = /^(?:(?:25[0-5]|2[0-4]\d|1?\d{1,2})\.){3}(?:25[0-5]|2[0-4]\d|1?\d{1,2})\/(?:[0-9]|[1-2][0-9]|3[0-2])$/;
+
+      function validateCreateForm() {
+        const input = document.getElementById('createCidr');
+        const error = document.getElementById('createCidrError');
+        if (!cidrPattern.test(input.value.trim())) {
+          error.classList.remove('hidden');
+          input.classList.add('border-red-500');
+          return false;
+        }
+        error.classList.add('hidden');
+        input.classList.remove('border-red-500');
+        return true;
+      }
+
+      function validateEditForm() {
+        const cidrInput = document.getElementById('editCidr');
+        const errorText = document.getElementById('cidrError');
+        if (!cidrPattern.test(cidrInput.value.trim())) {
+          errorText.classList.remove('hidden');
+          cidrInput.classList.add('border-red-500');
+          return false;
+        }
+        errorText.classList.add('hidden');
+        cidrInput.classList.remove('border-red-500');
+        return true;
+      }
+
+      // ===== Modales =====
+      function openEditModal(id, name, cidr) {
+        document.getElementById('editName').value = name;
+        document.getElementById('editCidr').value = cidr;
+        document.getElementById('editForm').action = `/networks/${id}/edit`;
+        showModal('editModal');
+      }
+
+      function openDeleteModal(id, name) {
+        document.getElementById('deleteForm').action = `/networks/${id}/delete`;
+        document.getElementById('deleteNetName').innerText = name;
+        showModal('deleteModal');
+      }
+
+      function closeEditModal() { hideModal('editModal'); }
+      function closeDeleteModal() { hideModal('deleteModal'); }
+
+      function showModal(id) {
+        const modal = document.getElementById(id);
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+      function hideModal(id) {
+        const modal = document.getElementById(id);
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+
+      // Cerrar con clic fuera o tecla Escape
+      function closeIfBackdrop(event, id) {
+        if (event.target.id === id) hideModal(id);
+      }
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          hideModal('editModal');
+          hideModal('deleteModal');
+        }
+      });
+    </script>
+  </div>
+</body>
+</html>

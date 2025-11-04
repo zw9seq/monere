@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>LAN Monitor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #1c1f25;
+      background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.08) 1px, transparent 0);
+      background-size: 40px 40px;
+    }
+  </style>
+</head>
+<body class="text-gray-100 min-h-screen">
+
+  <!-- CABECERA -->
+  <header class="bg-gradient-to-r from-yellow-500/20 via-gray-900 to-yellow-500/10 shadow-md py-6 mb-8 border-b border-yellow-600/30">
+    <div class="container mx-auto px-6 flex flex-col sm:flex-row items-center justify-between">
+      <h1 class="text-4xl font-extrabold text-yellow-400 tracking-wide drop-shadow-lg">
+        {{ network_name|escape or network_id|escape or 'Red desconocida' }}
+      </h1>
+      <a href="/" class="text-sm text-gray-400 hover:text-yellow-400 transition">
+        ← Volver al panel de redes
+      </a>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-6 pb-12">
+    <!-- ======================================= -->
+    <!-- PANEL DE FILTROS Y DESCARGA CSV ARRIBA -->
+    <!-- ======================================= -->
+    <div class="flex justify-end mb-6">
+      <div class="flex items-center space-x-4">
+        <div>
+          <label for="filterSelect" class="text-gray-300 mr-2">Filtrar:</label>
+          <select id="filterSelect"
+            class="bg-gray-900 border border-yellow-500 text-yellow-400 rounded-lg px-3 py-1 focus:outline-none focus:ring focus:ring-yellow-400/40">
+            <option value="all" selected>Todos</option>
+            <option value="online">Online</option>
+            <option value="offline">Offline</option>
+          </select>
+        </div>
+        <button id="exportCSVBtn"
+          class="bg-gray-900 hover:bg-gray-800 border border-yellow-500 text-yellow-400 rounded-xl p-2 transition"
+          title="Descargar CSV">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 16.5v-9m0 9 3.75-3.75M12 16.5l-3.75-3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25v-12A2.25 2.25 0 0 0 19.5 3H4.5A2.25 2.25 0 0 0 2.25 5.25v12A2.25 2.25 0 0 0 4.5 19.5Z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- =============================== -->
+    <!-- PANEL DE PING SWEEP -->
+    <!-- =============================== -->
+    <div class="bg-gray-800/70 backdrop-blur-md border border-yellow-600/30 rounded-2xl shadow-xl p-6 mb-8 transition hover:border-yellow-400/60 hover:shadow-yellow-500/10">
+      <div class="flex flex-col items-start justify-between gap-4">
+        <div class="flex items-center justify-between w-full">
+          <h2 class="text-xl font-semibold text-yellow-400">Ping Sweep</h2>
+          <button id="pingSweepBtn"
+            class="bg-yellow-500 hover:bg-yellow-400 text-black font-semibold px-4 py-2 rounded-lg transition">
+            Iniciar Scan
+          </button>
+        </div>
+
+        <p id="pingSweepMsg" class="text-sm text-gray-300 mb-3 hidden"></p>
+
+        <div id="pingSweepStats" class="hidden transition-all duration-300 ease-in-out w-full">
+          <div id="pingSweepProgress" class="w-full bg-gray-700 rounded-lg overflow-hidden h-5 mb-3">
+            <div id="pingSweepBar" class="h-5 bg-yellow-500 text-black text-sm text-center font-semibold w-0">0%</div>
+          </div>
+          <div class="flex justify-between text-sm text-gray-400">
+            <span>Procesados: <span id="ps-processed">0</span></span>
+            <span>Total: <span id="ps-total">0</span></span>
+            <span>Encontrados: <span id="ps-found">0</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =============================== -->
+    <!-- GRID DE TARJETAS -->
+    <!-- =============================== -->
+    <div id="devicesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <!-- Tarjetas generadas dinámicamente -->
+    </div>
+  </main>
+
+  <!-- =============================== -->
+  <!-- SCRIPT PRINCIPAL                -->
+  <!-- =============================== -->
+  <script>
+    const NETWORK_ID = "{{ network_id }}";
+
+    let scanningEnabled = true;
+
+    // Enviar keepalive cada 2 minutos para mantener la sesión activa
+    setInterval(() => {
+      fetch("/keepalive").catch(() => {});
+    }, 120000);
+
+    async function refreshTable() {
+      if (!scanningEnabled) return;
+      const res = await fetch(`/api/${NETWORK_ID}/devices`);
+      const devices = await res.json();
+
+      const filter = document.getElementById("filterSelect").value;
+      const grid = document.getElementById("devicesGrid");
+      grid.innerHTML = "";
+
+      // Filtrar por estado
+      const filteredDevices = Object.entries(devices).filter(([_, dev]) => {
+        if (filter === "all") return true;
+        const status = dev.status || "offline";
+        return status === filter;
+      });
+    
+      if (filteredDevices.length === 0) {
+        grid.innerHTML = `<p class="text-gray-400 col-span-full text-center mt-6">No hay dispositivos ${filter === "online" ? "en línea" : filter === "offline" ? "desconectados" : ""}.</p>`;
+        return;
+      }
+    
+      filteredDevices.forEach(([mac, dev]) => {
+        const status = dev.status || "offline";
+        const statusColor = status === "online" ? "bg-green-500" : "bg-gray-600";
+        const lastSeen = dev.last_seen || "Nunca";
+      
+        const card = document.createElement("div");
+        card.className = `bg-gray-800 rounded-2xl p-4 shadow-lg cursor-pointer transform hover:scale-105 transition duration-200 relative`;
+      
+        card.onclick = () => {
+          window.location.href = `/host/${mac}`;
+        };
+      
+        card.innerHTML = `
+          <div class="absolute top-3 right-3 w-3 h-3 rounded-full ${statusColor}"></div>
+          <h2 class="text-lg font-semibold mb-1 text-yellow-400">${dev.name || "Sin nombre"}</h2>
+          <p class="text-gray-400 text-sm mb-1"><strong>MAC:</strong> ${mac}</p>
+          <p class="text-gray-400 text-sm"><strong>Última vez visto:</strong> ${lastSeen}</p>
+        `;
+      
+        grid.appendChild(card);
+      });
+    }
+
+    document.getElementById("filterSelect").addEventListener("change", refreshTable);
+
+    /* ----------------------------------------------------------
+       DESCARGAR CSV
+    ------------------------------------------------------------- */
+
+    async function exportDevicesCSV() {
+      try {
+        const res = await fetch(`/api/${NETWORK_ID}/devices`);
+        const devices = await res.json();
+      
+        // Encabezados del CSV
+        const headers = [
+          "Nombre",
+          "IP",
+          "MAC",
+          "Estado",
+          "Última vez visto",
+          "Último portscan",
+          "Puertos abiertos",
+          "Servicios detectados",
+          "Total paquetes",
+          "Últimos paquetes"
+        ];
+      
+        const rows = Object.entries(devices).map(([mac, dev]) => {
+          // Puertos
+          const openPorts = dev.ports
+            ? Object.entries(dev.ports)
+                .filter(([_, p]) => p.state === "open")
+                .map(([port]) => port)
+                .join(", ")
+            : "";
+        
+          // Servicios
+          const services = dev.ports
+            ? Object.entries(dev.ports)
+                .filter(([_, p]) => p.service?.name)
+                .map(([port, p]) => `${port}:${p.service.name}${p.service.product ? " (" + p.service.product + ")" : ""}`)
+                .join(" | ")
+            : "";
+        
+          // Últimos paquetes (solo los primeros 3 para no saturar el CSV)
+          const packets = dev.traffic_stats?.last_packets
+            ? dev.traffic_stats.last_packets.slice(0, 3).join(" || ")
+            : "";
+        
+          return [
+            dev.name || "Sin nombre",
+            dev.ip || "",
+            mac,
+            dev.status || "offline",
+            dev.last_seen || "",
+            dev.last_portscan || "",
+            openPorts,
+            services,
+            dev.traffic_stats?.total_packets ?? "",
+            packets
+          ];
+        });
+      
+        // Construir CSV (escape de comillas incluido)
+        const csvContent = [headers, ...rows]
+          .map(row => row.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","))
+          .join("\n");
+      
+        // Descargar CSV
+        const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        const now = new Date().toISOString().split("T")[0];
+        a.download = `network_${NETWORK_ID}_devices_${now}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } catch (err) {
+        console.error("Error al generar CSV:", err);
+        alert("No se pudo generar el archivo CSV.");
+      }
+    }
+
+    document.getElementById("exportCSVBtn").addEventListener("click", exportDevicesCSV);
+
+
+    /* ----------------------------------------------------------
+       PING SWEEP COMPLETO
+    ------------------------------------------------------------- */
+
+    // Función central para mostrar/ocultar mensajes de estado
+    function setPingSweepMessage(text) {
+      const msg = document.getElementById("pingSweepMsg");
+      if (!msg) return;
+      if (text && text.trim() !== "") {
+        msg.textContent = text;
+        msg.classList.remove("hidden");
+      } else {
+        msg.textContent = "";
+        msg.classList.add("hidden");
+      }
+    }
+
+    const pingSweepBtn = document.getElementById("pingSweepBtn");
+    const pingSweepStats = document.getElementById("pingSweepStats");
+    const pingSweepBar = document.getElementById("pingSweepBar");
+    const psProcessed = document.getElementById("ps-processed");
+    const psTotal = document.getElementById("ps-total");
+    const psFound = document.getElementById("ps-found");
+
+    pingSweepBtn.addEventListener("click", async () => {
+      // Desactiva el botón y cambia texto
+      pingSweepBtn.disabled = true;
+      pingSweepBtn.textContent = "Escaneando...";
+      pingSweepBtn.classList.add("opacity-70", "cursor-not-allowed");
+    
+      // Muestra el bloque de progreso
+      setPingSweepMessage("Iniciando barrido...");
+      pingSweepStats.classList.remove("hidden");
+    
+      // Reinicio visual
+      pingSweepBar.style.width = "0%";
+      pingSweepBar.textContent = "0%";
+      psProcessed.textContent = 0;
+      psTotal.textContent = 0;
+      psFound.textContent = 0;
+    
+      // Inicia el barrido en backend
+      await fetch(`/scan/${NETWORK_ID}/ping_sweep`, {
+         method: "POST",
+         headers: { "X-Requested-With": "XMLHttpRequest" } 
+        });
+      setPingSweepMessage("Barrido en curso...");
+    
+      // Actualización periódica de progreso
+      const interval = setInterval(async () => {
+        const res = await fetch(`/scan/${NETWORK_ID}/ping_sweep/status`);
+        const data = await res.json();
+      
+        psProcessed.textContent = data.processed;
+        psTotal.textContent = data.total;
+        psFound.textContent = data.found_count;
+      
+        const progress = data.total ? (data.processed / data.total) * 100 : 0;
+        pingSweepBar.style.width = `${progress}%`;
+        pingSweepBar.textContent = `${Math.round(progress)}%`;
+      
+        // Si termina el barrido
+        if (!data.running) {
+          clearInterval(interval);
+          setPingSweepMessage(`Barrido completado (${data.found_count} dispositivos encontrados)`);
+        
+          // Reactiva botón tras 3s y oculta estadísticas
+          setTimeout(() => {
+            pingSweepStats.classList.add("hidden");
+            setPingSweepMessage(""); // oculta el mensaje
+            pingSweepBtn.disabled = false;
+            pingSweepBtn.textContent = "Iniciar Scan";
+            pingSweepBtn.classList.remove("opacity-70", "cursor-not-allowed");
+          }, 3000);
+        }
+      }, 1000);
+    });
+
+
+    /* ----------------------------------------------------------
+       AUTO REFRESH DE TARJETAS
+    ------------------------------------------------------------- */
+    setInterval(refreshTable, 10000);
+    refreshTable();
+  </script>
+</body>
+</html>

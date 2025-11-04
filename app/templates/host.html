@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Detalles del dispositivo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #14171c;
+      background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.07) 1px, transparent 0);
+      background-size: 35px 35px;
+    }
+  </style>
+</head>
+
+<body class="text-gray-100 min-h-screen">
+  <div class="container mx-auto py-8 px-4">
+    <button onclick="goBackAndRefresh()" class="mb-6 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-xl text-black font-semibold shadow">
+      ← Volver
+    </button>
+
+    <div class="space-y-6">
+
+      <!-- TARJETA INFORMACIÓN DEL DISPOSITIVO -->
+      <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          <!-- Columna izquierda: info básica -->
+          <div>
+            <h2 class="text-2xl font-semibold mb-5 text-yellow-400 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v15m7.5-7.5h-15"/>
+              </svg>
+              <span>Información del dispositivo</span>
+            </h2>
+
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+              <div>
+                <div class="flex items-center space-x-2">
+                  <p id="device-name" class="text-3xl font-bold text-white">{{ device.name | default('Sin nombre') }}</p>
+                  <button id="edit-name-btn" class="text-gray-400 hover:text-white" title="Editar nombre">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 4.487l1.651 1.65m-2.489-.354l-9.92 9.92a1.125 1.125 0 00-.293.51l-.802 3.21a.563.563 0 00.685.685l3.21-.802a1.125 1.125 0 00.51-.293l9.92-9.92a1.125 1.125 0 000-1.59l-1.92-1.92a1.125 1.125 0 00-1.59 0z"/>
+                    </svg>
+                  </button>
+                </div>
+
+                <div id="edit-name-form" class="hidden mt-2 flex space-x-2">
+                  <input id="edit-name-input" type="text"
+                         class="rounded-lg px-2 py-1 bg-gray-700 text-white border border-gray-600 focus:ring-2 focus:ring-yellow-400 outline-none"
+                         value="{{ device.name | default('') }}">
+                  <button id="save-name-btn" class="px-3 py-1 bg-green-600 rounded hover:bg-green-700">Guardar</button>
+                  <button id="cancel-name-btn" class="px-3 py-1 bg-gray-600 rounded hover:bg-gray-700">Cancelar</button>
+                </div>
+                <p class="text-sm text-gray-400 italic mt-1">{{ vendor }}</p>
+              </div>
+
+              <div class="mt-3 sm:mt-0">
+                {% if device.status == 'online' %}
+                  <span class="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10"/></svg> Online
+                  </span>
+                {% else %}
+                  <span class="bg-gray-600 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10"/></svg> Offline
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-gray-300 text-sm">
+              <p><strong>Dirección IP:</strong> <span class="text-gray-100">{{ device.ip or 'Desconocida' }}</span></p>
+              <p><strong>MAC:</strong> <span class="text-gray-100">{{ mac }}</span></p>
+              {% if device.last_seen %}
+                <p><strong>Última vez visto:</strong> <span class="text-gray-100">{{ device.last_seen }}</span></p>
+              {% endif %}
+              {% if device.last_portscan %}
+                <p><strong>Último escaneo de puertos:</strong> <span class="text-gray-100">{{ device.last_portscan }}</span></p>
+              {% endif %}
+              {% if device.ports %}
+                <p><strong>Puertos abiertos:</strong> 
+                  <span class="bg-yellow-500 text-black px-2 py-0.5 rounded text-xs ml-1">
+                    {{ device.ports | length }}
+                  </span>
+                </p>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Columna derecha: tráfico reciente -->
+          <div class="bg-gray-900 rounded-xl p-5 border border-gray-700">
+            <h2 class="font-semibold text-yellow-400 mb-3 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6h13M5 19v-6h4"/>
+              </svg>
+              Tráfico reciente
+            </h2>
+
+            {% if device.traffic_stats %}
+              <hr class="border-gray-600 my-3">
+              <div class="text-gray-300">
+                <ul class="text-sm space-y-1 ml-2 mb-2">
+                  <li><strong>Interfaz:</strong> {{ device.traffic_stats.iface }}</li>
+                  <li><strong>Paquetes capturados:</strong> {{ device.traffic_stats.total_packets }}</li>
+                  <li><strong>Última captura:</strong> {{ device.traffic_stats.captured_at }}</li>
+                </ul>
+              
+                {% if device.traffic_stats.last_packets %}
+                  <div class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-xs font-mono overflow-y-auto max-h-24 shadow-inner">
+                    {% for packet in device.traffic_stats.last_packets %}
+                      <div class="text-gray-400 truncate hover:text-gray-200 hover:whitespace-normal transition">
+                        {{ packet }}
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <p class="text-gray-500 italic text-sm">No se han capturado paquetes recientemente.</p>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- FILA INFERIOR: PUERTOS Y ACCIONES -->
+      <div class="flex flex-col lg:flex-row gap-6 mt-6 items-start">
+
+        <!-- Puertos detectados -->
+        <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700 flex-1 min-w-0">
+          <h2 class="text-xl font-semibold mb-4 text-yellow-400 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8h18M3 16h18"/>
+            </svg>
+            <span>Puertos detectados</span>
+          </h2>
+        
+          <div class="flex-1 overflow-y-auto">
+            {% if device.ports %}
+              <ul class="space-y-2 text-gray-300 text-sm">
+                {% for port, info in device.ports.items() %}
+                  <li 
+                    class="bg-gray-700 rounded-lg px-3 py-2 hover:bg-gray-600 transition cursor-pointer group"
+                    onclick="togglePortDetails('port-{{ port }}')"
+                  >
+                    <div class="flex justify-between items-center">
+                      <div>
+                        <span class="font-semibold text-yellow-400">{{ port }}</span> —
+                        <span>{{ info.service.name or 'desconocido' }}</span>
+                        <span class="text-xs text-gray-400">({{ info.state }})</span>
+                      </div>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400 group-hover:text-yellow-400 transition-transform" id="icon-port-{{ port }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  
+                    <!-- Detalles ocultos -->
+                    <div id="port-{{ port }}" class="hidden bg-gray-800 mt-2 rounded-lg p-3 text-xs border border-gray-700 animate-fadeIn">
+                      {% if info.service %}
+                        <ul class="space-y-1">
+                          <li><strong>Servicio:</strong> {{ info.service.name or '—' }}</li>
+                          <li><strong>Producto:</strong> {{ info.service.product or '—' }}</li>
+                          <li><strong>Versión:</strong> {{ info.service.version or '—' }}</li>
+                          <li><strong>Extra Info:</strong> {{ info.service.extrainfo or '—' }}</li>
+                        </ul>
+                      {% else %}
+                        <p class="text-gray-400 italic">Sin información adicional.</p>
+                      {% endif %}
+                    </div>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="text-gray-400 italic">No hay puertos escaneados aún.</p>
+            {% endif %}
+          </div>
+        
+          <div class="mt-4 flex items-center justify-between">
+            <button onclick="startPortScan()" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black font-semibold shadow flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m-4-4h8"/>
+              </svg>
+              Escanear puertos
+            </button>
+            <span id="portscan-status" class="text-gray-300 text-sm"></span>
+          </div>
+        </div>
+
+        <!-- Columna derecha: Acciones + Nota -->
+        <div class="flex flex-col gap-6 w-full lg:w-1/2">
+
+          <!-- Acciones -->
+          <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700 h-48 flex flex-col">
+            <h2 class="text-xl font-semibold mb-4 text-yellow-400 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M4 12h8m-8 5h16"/>
+              </svg>
+              <span>Acciones</span>
+            </h2>
+            <div class="space-y-3">
+              <button onclick="pingDevice()" class="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-black font-semibold shadow-md flex items-center justify-center gap-2 transition-all duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/>
+                </svg>
+                Hacer Ping
+              </button>
+              <button onclick="startSnifferUI()" class="w-full flex items-center justify-center gap-2 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A2 2 0 0122 9.618v4.764a2 2 0 01-2.447 1.894L15 14m0 0l-3 6m3-6L9 10m0 0L5.447 7.724A2 2 0 013 9.618v4.764a2 2 0 002.447 1.894L9 14z"/>
+                </svg>
+                Iniciar Sniffer
+              </button>
+            </div>
+          </div>
+
+          <!-- Nota del dispositivo -->
+          <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700 h-auto flex flex-col">
+            <h2 class="text-xl font-semibold mb-4 text-yellow-400 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5h2m2 0h2m-6 4h6m-9 4h9m-12 4h12" />
+              </svg>
+              <span>Nota del dispositivo</span>
+            </h2>
+          
+            <textarea id="device-note"
+              maxlength="500"
+              placeholder="Escribe una nota sobre este dispositivo..."
+              class="w-full bg-gray-900 text-gray-200 p-3 rounded-lg resize-none h-32 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition">{{ device.note or '' }}</textarea>
+          
+            <div id="note-status" class="text-sm text-gray-400 mt-2 h-5"></div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+
+    <!-- Modal del ping -->
+    <div id="pingModal" class="fixed inset-0 bg-black/70 flex items-center justify-center hidden z-50">
+      <div class="bg-[#1e2128] text-white rounded-2xl p-6 w-80 shadow-xl border border-gray-700 text-center animate-fadeIn">
+        <h3 class="text-lg font-semibold mb-2 text-yellow-400">Resultado del Ping</h3>
+        <p id="pingMessage" class="text-sm text-gray-300 mb-4">...</p>
+        <button onclick="closePingModal()" class="bg-yellow-600 hover:bg-yellow-500 px-4 py-2 rounded-lg font-semibold w-full">Cerrar</button>
+      </div>
+    </div>
+
+    <style>
+      @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      .animate-fadeIn {
+        animation: fadeIn 0.25s ease-out;
+      }
+    </style>
+
+    <!-- Modal del Sniffer -->
+    <div id="snifferModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center">
+      <div class="bg-gray-800 rounded-2xl shadow-2xl w-11/12 max-w-4xl p-6 border border-gray-700">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-yellow-400 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Sniffer activo
+          </h2>
+          <button id="closeSniffer" class="text-red-500 hover:text-red-700 text-xl font-bold">✕</button>
+        </div>
+      
+        <div id="snifferInfo" class="grid grid-cols-2 gap-y-1 text-sm text-gray-300 mb-4">
+          <p><strong>Interfaz:</strong> <span id="snifferIface">-</span></p>
+          <p><strong>IP objetivo:</strong> <span id="snifferIP">-</span></p>
+          <p><strong>Estado:</strong> <span id="snifferStatus">-</span></p>
+          <p><strong>Total paquetes:</strong> <span id="snifferPackets">0</span></p>
+        </div>
+      
+        <div class="bg-gray-900 rounded-lg p-3 h-96 overflow-y-scroll text-xs font-mono border border-gray-700" id="snifferOutput"></div>
+      
+        <div class="mt-5 flex justify-end gap-3">
+          <button id="stopSniffer" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 font-semibold shadow flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            Detener sniffer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const NETWORK_ID = "{{ network_id }}";
+    const MAC = "{{ mac }}";
+
+    // Enviar keepalive cada 2 minutos para mantener la sesión activa
+    setInterval(() => {
+      fetch("/keepalive").catch(() => {});
+    }, 120000);
+
+    /* ----------------------------- */
+    /* RECARGAR PAGINA AL VOLVER */
+    /* ----------------------------- */
+
+    function goBackAndRefresh() {
+      if (document.referrer.includes('/network/')) {
+        // si venimos desde network.html
+        window.location.href = document.referrer; // vuelve y recarga
+      } else {
+        window.history.back();
+        setTimeout(() => location.reload(), 300);
+      }
+    }
+
+    /* ----------------------------- */
+    /* EDITAR NOMBRE DEL HOST */
+    /* ----------------------------- */
+    document.addEventListener("DOMContentLoaded", () => {
+      const editBtn = document.getElementById("edit-name-btn");
+      const form = document.getElementById("edit-name-form");
+      const nameDisplay = document.getElementById("device-name");
+      const input = document.getElementById("edit-name-input");
+      const saveBtn = document.getElementById("save-name-btn");
+      const cancelBtn = document.getElementById("cancel-name-btn");
+    
+      editBtn.addEventListener("click", () => {
+        form.classList.remove("hidden");
+        editBtn.classList.add("hidden");
+        input.focus();
+      });
+    
+      cancelBtn.addEventListener("click", () => {
+        form.classList.add("hidden");
+        editBtn.classList.remove("hidden");
+        input.value = nameDisplay.textContent;
+      });
+    
+      saveBtn.addEventListener("click", async () => {
+        const newName = input.value.trim();
+        if (!newName) {
+          alert("El nombre no puede estar vacío.");
+          return;
+        }
+      
+        try {
+          const formData = new FormData();
+          formData.append("mac", MAC);
+          formData.append("name", newName);
+        
+          const res = await fetch(`/update_name/${NETWORK_ID}`, {
+            method: "POST",
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+            body: formData
+          });
+        
+          if (!res.ok) throw new Error("Error al actualizar el nombre.");
+        
+          if (res.ok) {
+            nameDisplay.textContent = newName;
+            form.classList.add("hidden");
+            editBtn.classList.remove("hidden");
+          } else {
+            alert("Error al actualizar el nombre.");
+          }
+        } catch (err) {
+          alert("Error: " + err.message);
+        }
+      });
+    });
+
+    /* ----------------------------- */
+    /* DETALLES DE PUERTO DESPLEGABLES */
+    /* ----------------------------- */
+    function togglePortDetails(id) {
+      const el = document.getElementById(id);
+      const icon = document.getElementById("icon-" + id.replace("port-", ""));
+      if (el.classList.contains("hidden")) {
+        el.classList.remove("hidden");
+        icon.classList.add("rotate-180");
+      } else {
+        el.classList.add("hidden");
+        icon.classList.remove("rotate-180");
+      }
+    }
+
+    /* ----------------------------- */
+    /* PING */
+    /* ----------------------------- */
+    
+    function showPingModal(message) {
+      const modal = document.getElementById("pingModal");
+      const msg = document.getElementById("pingMessage");
+      msg.textContent = message;
+      modal.classList.remove("hidden");
+    }
+
+    function closePingModal() {
+      document.getElementById("pingModal").classList.add("hidden");
+      // Tras cerrar el modal, refrescamos la página para que se actualice el estado del host
+      location.reload();
+    }
+
+    async function pingDevice() {
+      try {
+        const res = await fetch(`/ping/${NETWORK_ID}/${MAC}`, {
+         method: "POST",
+         headers: { "X-Requested-With": "XMLHttpRequest" } 
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+
+        // Tu backend devuelve "online" o "offline"
+        if (data.status === "online") {
+          showPingModal("Host Activo");
+        } else if (data.status === "offline") {
+          showPingModal("Host Inactivo");
+        } else {
+          showPingModal("No se pudo determinar el estado del host.");
+        }
+      } catch (error) {
+        showPingModal("Ocurrió un error al intentar hacer ping.");
+        console.error("Error al hacer ping:", error);
+      }
+    }
+
+    /* ----------------------------- */
+    /* PORTSCAN */
+    /* ----------------------------- */
+    async function startPortScan() {
+      const btn = document.getElementById("portscan-status");
+      btn.textContent = "Iniciando...";
+      try {
+        const res = await fetch(`/scan/${NETWORK_ID}/${MAC}/ports`, {
+         method: "POST",
+         headers: { "X-Requested-With": "XMLHttpRequest" } 
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        if (data.scan_id) {
+          pollPortScan(data.scan_id);
+        } else {
+          btn.textContent = "Error al iniciar escaneo";
+        }
+      } catch (err) {
+        btn.textContent = "Error al iniciar escaneo";
+      }
+    }
+
+    function pollPortScan(scanId) {
+      const statusEl = document.getElementById("portscan-status");
+      const interval = setInterval(async () => {
+        const res = await fetch(`/scan/ports/${scanId}/status`);
+        const s = await res.json();
+        if (!s.running) {
+          clearInterval(interval);
+          if (s.error) {
+            statusEl.textContent = `Error: ${s.error}`;
+          } else {
+            statusEl.textContent = "Escaneo completado";
+          }
+          location.reload();
+        } else {
+          statusEl.textContent = "Escaneando...";
+        }
+      }, 1000);
+    }
+
+    /* ----------------------------- */
+    /* SNIFFER */
+    /* ----------------------------- */
+    let activeSniffer = null;
+    let sniffInterval = null;
+    let lastIndex = 0;
+
+    async function startSnifferUI() {
+      const res = await fetch(`/sniff/${NETWORK_ID}/${MAC}/start`, {
+         method: "POST",
+         headers: { "X-Requested-With": "XMLHttpRequest" } 
+        });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      if (data.status === "started") {
+        activeSniffer = data.scan_id;
+        lastIndex = 0;
+      
+        document.getElementById("snifferIface").textContent = data.iface;
+        document.getElementById("snifferIP").textContent = data.target;
+        document.getElementById("snifferModal").classList.remove("hidden");
+      
+        startSnifferPolling();
+      }
+    }
+
+    function startSnifferPolling() {
+      sniffInterval = setInterval(async () => {
+        if (!activeSniffer) return;
+        try {
+          const res = await fetch(`/sniff/${activeSniffer}/status?last_index=${lastIndex}`);
+          if (!res.ok) throw new Error(await res.text());
+          const data = await res.json();
+        
+          if (data.status === "not_found") {
+            stopSnifferPolling();
+            return;
+          }
+        
+          document.getElementById("snifferStatus").textContent = data.status;
+          document.getElementById("snifferPackets").textContent = data.total_packets;
+        
+          const output = document.getElementById("snifferOutput");
+          if (data.new_packets && data.new_packets.length > 0) {
+            const html = data.new_packets.map(line => `<div>${line}</div>`).join("");
+            output.insertAdjacentHTML("beforeend", html);
+            output.scrollTop = output.scrollHeight;
+            lastIndex = data.next_index;
+          }
+        
+          if (data.status !== "running") stopSnifferPolling();
+        } catch (err) {
+          console.error("Error al actualizar sniffer:", err);
+        }
+      }, 1000);
+    }
+
+    function stopSnifferPolling() {
+      if (sniffInterval) clearInterval(sniffInterval);
+      sniffInterval = null;
+    }
+
+    document.getElementById("stopSniffer").onclick = async () => {
+      if (!activeSniffer) return;
+      await fetch(`/sniff/${activeSniffer}/stop`, {
+         method: "POST",
+         headers: { "X-Requested-With": "XMLHttpRequest" } 
+        });
+      stopSnifferPolling();
+      document.getElementById("snifferStatus").textContent = "stopped";
+    };
+
+    document.getElementById("closeSniffer").onclick = () => {
+      document.getElementById("snifferModal").classList.add("hidden");
+      stopSnifferPolling();
+      // Tras cerrar el modal, refrescamos la página para que se actualice el estado del host
+      location.reload();
+    };
+
+    /* ----------------------------- */
+    /* GUARDAR NOTA DEL DISPOSITIVO */
+    /* ----------------------------- */
+    let noteSaveTimeout = null;
+
+    async function saveDeviceNote(auto = false) {
+      const noteField = document.getElementById("device-note");
+      const statusEl = document.getElementById("note-status");
+      const note = noteField.value.trim();
+    
+      if (note.length > 500) {
+        statusEl.textContent = "⚠️ La nota supera el límite de 500 caracteres.";
+        return;
+      }
+    
+      statusEl.textContent = auto ? "Guardando automáticamente..." : "Guardando...";
+      try {
+        const res = await fetch(`/update_note/${NETWORK_ID}/${MAC}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ note })
+        });
+      
+        if (!res.ok) throw new Error("Error al guardar la nota");
+      
+        statusEl.textContent = auto ? "Guardado" : "Guardado";
+        setTimeout(() => statusEl.textContent = "", 2000);
+      } catch (err) {
+        statusEl.textContent = "Error al guardar la nota";
+        console.error(err);
+      }
+    }
+
+    /* ----------------------------- */
+    /* AUTO-GUARDADO CON DEBOUNCE   */
+    /* ----------------------------- */
+    document.getElementById("device-note").addEventListener("input", () => {
+      const statusEl = document.getElementById("note-status");
+      statusEl.textContent = "Editando...";
+      clearTimeout(noteSaveTimeout);
+      noteSaveTimeout = setTimeout(() => saveDeviceNote(true), 2000);
+    });
+
+  </script>
+</body>
+</html>

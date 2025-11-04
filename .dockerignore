@@ -1,0 +1,12 @@
+# Ignorar entornos locales
+.venv/
+__pycache__/
+*.pyc
+
+# Ignorar archivos innecesarios
+.git/
+.gitignore
+README.md
+
+# Ignorar datos que ya se montan como volumen
+data/
