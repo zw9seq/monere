@@ -38,7 +38,7 @@ To run Monere, you’ll need:
 - **Docker** and **Docker Compose** installed  
 - A **Linux host** (for full ARP access)  
 - Root or elevated privileges (to allow raw socket operations)
-- 
+
 ---
 
 ## ⚙️ Installation & Setup
