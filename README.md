@@ -5,26 +5,29 @@ It’s designed for local network monitoring with a modern, minimal interface an
 
 ---
 
-## 🚀 Features
+## 🚀 **Features**
 
-- 🕵️‍♂️ **Automatic Network Discovery** — Detect all active hosts within your LAN.  
-- 🧭 **ARP-based MAC Resolution** — Retrieve vendor and hardware details from MAC addresses.  
-- 🌐 **Modern Web Dashboard** — Built with Jinja2 + Tailwind CSS for a clean and responsive UI.  
-- 💾 **Persistent Storage** — Saves discovered networks and device data locally in `/data`.  
-- 🐳 **Docker-Ready** — Runs as a self-contained container, easily deployable on any Linux host.  
-- ⚙️ **FastAPI Backend** — Asynchronous and lightweight for high responsiveness.
+* 🕵️‍♂️ **Network Discovery** — Perform full subnet scans to identify active devices using **ICMP ping sweeps**.
+* 🧭 **ARP-Based MAC Resolution** — Retrieve each device’s hardware (MAC) address and resolve its manufacturer using the **OUI database**.
+* 🔍 **Port Scanning with Nmap** — Analyze each host to detect **open ports and active services**.
+* 📡 **Live Packet Sniffing** — Capture and inspect live traffic from selected interfaces for network activity monitoring.
+* 🌐 **Interactive Web Dashboard** — View all devices, scan history, and host details in a **modern Tailwind-powered interface**.
+* 💾 **Persistent Data Storage** — Network and host data are saved under `/data` for persistence between container restarts.
+* 🐳 **Containerized Deployment** — Fully operational via **Docker** with simple `docker compose up -d` setup.
+* ⚙️ **High Performance Backend** — Built with **FastAPI**, **async I/O**, and **threaded scanning** for efficient execution.
 
 ---
+## 🧰 **Tech Stack**
 
-## 🧰 Tech Stack
-
-| Layer | Technology |
-|-------|-------------|
-| Backend | FastAPI (Python 3.11+) |
-| Frontend | Jinja2 Templates + Tailwind CSS |
-| Networking | Scapy, netifaces |
-| Deployment | Docker + Docker Compose |
-| Storage | Local JSON-based persistence |
+| Layer          | Technology                           | Description                                     |
+| -------------- | ------------------------------------ | ----------------------------------------------- |
+| **Backend**    | FastAPI                              | Asynchronous Python web framework               |
+| **Frontend**   | Jinja2 + Tailwind CSS                | Dynamic HTML templating and responsive styling  |
+| **Networking** | Scapy, Nmap (python-nmap), netifaces | ARP scanning, ping sweeps, and port enumeration |
+| **Sniffing**   | Tcpdump                              | Packet capture and live traffic analysis        |
+| **Storage**    | JSON files (networks.json, oui.json) | Lightweight persistent local storage            |
+| **Deployment** | Docker & Docker Compose              | Containerized environment with host networking  |
+| **Language**   | Python 3.11+                         | Modern async syntax and typing support          |
 
 ---
 
@@ -67,17 +70,24 @@ To run Monere, you’ll need:
 ```
 monere/
 ├── app/
-│   ├── main.py              # FastAPI entrypoint
-│   ├── storage.py           # Handles network/device data persistence
-│   ├── templates/           # Jinja2 templates (UI)
-│   ├── static/              # Static assets (CSS, JS)
-│   └── ...                  
-├── data/                    # Persistent data storage (mounted volume)
-├── oui.json                 # MAC manufacturer database
-├── Dockerfile               # Container definition
-├── docker-compose.yml       # Deployment configuration
-├── requirements.txt         # Python dependencies
-└── README.md
+│   ├── __init__.py
+│   ├── main.py              # FastAPI entry point and route definitions
+│   ├── network.py           # Handles network scanning (ping, ports, ARP)
+│   ├── storage.py           # Persistent data handling for networks and hosts
+│   ├── static/              # Static assets (CSS, JS, images)
+│   └── templates/           # HTML templates (Jinja2)
+│       ├── index.html       # Main dashboard
+│       ├── networks.html    # List of scanned networks
+│       ├── host.html        # Host details and port scan view
+│       └── error.html       # Error page
+├── config/
+│   └── oui.json             # MAC vendor database (backup or reference copy)
+├── data/
+│   └── networks.json        # Stored network data
+├── docker-compose.yml       # Docker Compose configuration
+├── Dockerfile               # Docker build file
+└── requirements.txt         # Python dependencies
+
 ```
 
 ---
@@ -101,14 +111,28 @@ cap_add:
 
 ---
 
-## 🧠 How It Works
+## 🧠 **How It Works**
 
-1. Monere identifies your local subnet via `netifaces`.
-2. It performs a parallel **ARP scan** to detect active devices.
-3. Each MAC address is resolved against the `oui.json` database to identify the manufacturer.
-4. The results are stored locally and displayed in a clean web dashboard.
+Monere combines multiple network inspection techniques to give you a full picture of your LAN:
 
-*(You can trigger scans manually or automatically based on your setup.)*
+1. **Network Identification**
+   Using `netifaces`, Monere automatically detects the system’s active interface and subnet (e.g., `192.168.1.0/24`).
+
+2. **Ping Sweep**
+   It performs a **parallel ICMP ping sweep** across the subnet to find active hosts quickly and efficiently.
+
+3. **ARP Resolution**
+   Once hosts respond, the app retrieves their **MAC addresses** using ARP requests, mapping each to a manufacturer via the **OUI database**.
+
+4. **Port Scanning (Nmap)**
+   For each discovered host, Monere can run an **Nmap scan** to identify **open TCP/UDP ports** and detect services.
+
+5. **Packet Sniffing**
+   The integrated sniffer (using Tcpdump) captures and inspects **real-time packets**, allowing monitoring of active network traffic from the web interface.
+
+6. **Storage & Dashboard**
+   All data (networks, hosts, scan results) is saved under `/data/`, ensuring persistence.
+   The FastAPI backend serves an intuitive dashboard showing network activity, host details, and scan history.
 
 ---
 
