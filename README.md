@@ -35,12 +35,7 @@ To run Monere, you’ll need:
 - **Docker** and **Docker Compose** installed  
 - A **Linux host** (for full ARP access)  
 - Root or elevated privileges (to allow raw socket operations)
-
-Optional (for local dev setup without Docker):
-
-- Python 3.11+  
-- `pip` for dependency management  
-
+- 
 ---
 
 ## ⚙️ Installation & Setup
@@ -67,24 +62,6 @@ Optional (for local dev setup without Docker):
 
 ---
 
-### 🧑‍💻 Running Locally (development mode)
-
-1. Install dependencies:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. Run the app:
-
-   ```bash
-   uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-   ```
-
-3. Visit `http://localhost:8000`
-
----
-
 ## 🗂️ Project Structure
 
 ```
@@ -102,20 +79,6 @@ monere/
 ├── requirements.txt         # Python dependencies
 └── README.md
 ```
-
----
-
-## 🛠️ Configuration
-
-Monere uses a few runtime options that can be customized in the code or environment variables:
-
-| Variable        | Description                  | Default              |
-| --------------- | ---------------------------- | -------------------- |
-| `SCAN_INTERVAL` | Time between automatic scans | `60s`                |
-| `DATA_DIR`      | Path for data storage        | `/app/data`          |
-| `OUI_PATH`      | Path to the OUI JSON file    | `/app/data/oui.json` |
-
-*(If you want environment-based configuration, you can extend with `.env` support.)*
 
 ---
 
