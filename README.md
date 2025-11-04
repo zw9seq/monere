@@ -43,8 +43,6 @@ To run Monere, you’ll need:
 
 ## ⚙️ Installation & Setup
 
-### 🐳 Using Docker (recommended)
-
 1. **Clone the repository**
    ```bash
    git clone https://github.com/zw9seq/monere.git
