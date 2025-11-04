@@ -159,20 +159,6 @@ cap_add:
 
 ---
 
-## 🧑‍💻 Author
-
-**<Your Name>** <Short bio or contact info>
-📧 [your.email@example.com](mailto:your.email@example.com)
-🐙 [GitHub Profile](https://github.com/<your-username>)
-
----
-
-## 📄 License
-
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
-
----
-
 ## 🌟 Contributing
 
 Pull requests and feature suggestions are welcome!
@@ -188,6 +174,23 @@ Feel free to open an issue or contribute improvements — especially UI enhancem
 | Permission denied errors      | Missing `NET_ADMIN` or root   | Add `cap_add` to compose  |
 | Can't access web UI           | Wrong IP or port              | Use host IP:8000          |
 | No devices found              | Network isolation or firewall | Ensure container sees LAN |
+
+---
+
+## 👤 Author
+
+**zw9seq**
+📅 Built with 💻 + ☕
+
+For more details: https://zw9seq.github.io/proyectos/archFiles
+
+⭐ If you find this tool useful, consider giving the repo a **star**!
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
 ---
 
