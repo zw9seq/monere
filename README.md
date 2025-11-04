@@ -182,7 +182,7 @@ Feel free to open an issue or contribute improvements — especially UI enhancem
 **zw9seq**
 📅 Built with 💻 + ☕
 
-For more details: https://zw9seq.github.io/proyectos/archFiles
+For more details: https://zw9seq.github.io/proyectos/monere
 
 ⭐ If you find this tool useful, consider giving the repo a **star**!
 
