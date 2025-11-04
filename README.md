@@ -51,7 +51,7 @@ Optional (for local dev setup without Docker):
    ```bash
    git clone https://github.com/zw9seq/monere.git
    cd monere
-````
+   ```
 
 2. **Build and run the container**
 
