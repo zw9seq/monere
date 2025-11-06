@@ -72,7 +72,6 @@ monere/
 │   ├── main.py              # FastAPI entry point and route definitions
 │   ├── network.py           # Handles network scanning (ping, ports, ARP)
 │   ├── storage.py           # Persistent data handling for networks and hosts
-│   ├── static/              # Static assets (CSS, JS, images)
 │   └── templates/           # HTML templates (Jinja2)
 │       ├── index.html       # Main dashboard
 │       ├── networks.html    # List of scanned networks
