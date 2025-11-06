@@ -60,7 +60,7 @@
         {% for net_id, net in networks.items() %}
         <div class="relative group bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-2xl p-5 shadow-md transition transform hover:scale-[1.02]">
           <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition flex gap-2">
-            <button aria-label="Editar red" onclick="openEditModal('{{ net_id|tojson }}', '{{ net.name|tojson }}', '{{ net.cidr|tojson }}')" class="text-blue-400 hover:text-blue-300 text-sm">✏️</button>
+            <button aria-label="Editar red" onclick="openEditModal('{{ net_id|escape }}', '{{ net.name|escape }}', '{{ net.cidr|escape }}')" class="text-blue-400 hover:text-blue-300 text-sm">✏️</button>
             <button aria-label="Eliminar red" onclick="openDeleteModal('{{ net_id }}', '{{ net.name|escape }}')" class="text-red-400 hover:text-red-300 text-sm">🗑️</button>
           </div>
 
