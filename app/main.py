@@ -23,7 +23,6 @@ from .storage import (
 # App & Templates
 # ================================================================
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
 
 NETWORKS_FILE = os.path.join("data", "networks.json")
