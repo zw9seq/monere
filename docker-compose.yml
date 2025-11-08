@@ -3,6 +3,8 @@ services:
     build: .
     container_name: monere_app
     network_mode: "host"
+    enviroment:
+      - SNIFFER_IFACE=wlan0           # MODIFY THIS
     volumes:
       - ./data:/app/data
       - ./oui.json:/app/data/oui.json
