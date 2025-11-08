@@ -597,8 +597,9 @@ async def start_sniffer(network_id: str, mac: str):
     # Obtener interfaz local
     try:
         from .network import get_default_interface_network
-        iface, _ = get_default_interface_network(return_iface=True)
-    except Exception:
+        iface = get_default_interface_network(return_iface=True)
+    except Exception as e:
+        print(f"[WARN] Error detecting interface: {e}")
         iface = os.getenv("DEFAULT_IFACE", "eth0")
 
     if not iface:
