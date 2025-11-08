@@ -1,4 +1,4 @@
-import netifaces
+import netifaces, os
 from scapy.all import ARP, Ether, srp
 import platform
 import subprocess
@@ -18,19 +18,33 @@ from .storage import load_devices, save_devices, update_device, list_networks, _
 def get_default_interface_network(return_iface=False):
     """
     Devuelve la interfaz de red principal y su información (gateway, ip, netmask).
-    Si return_iface=True, solo devuelve el nombre de la interfaz.
+    Permite forzar una interfaz con la variable de entorno SNIFFER_IFACE.
     """
+    forced_iface = os.getenv("SNIFFER_IFACE")
+    if forced_iface:
+        try:
+            addrs = netifaces.ifaddresses(forced_iface)
+            ipv4_info = addrs.get(netifaces.AF_INET, [{}])[0]
+            gws = netifaces.gateways()
+            network_info = {
+                "iface": forced_iface,
+                "ip": ipv4_info.get("addr"),
+                "netmask": ipv4_info.get("netmask"),
+                "gateway": gws.get('default', {}).get(netifaces.AF_INET, [None])[0],
+            }
+            return forced_iface if return_iface else (forced_iface, network_info)
+        except Exception as e:
+            print(f"[!] Error usando interfaz forzada {forced_iface}: {e}")
+
+    # Fallback a detección automática
     try:
         gws = netifaces.gateways()
         default = gws.get('default', {})
         iface = None
-
-        # Intentar con IPv4 o IPv6
         if netifaces.AF_INET in default:
             iface = default[netifaces.AF_INET][1]
         elif netifaces.AF_INET6 in default:
             iface = default[netifaces.AF_INET6][1]
-
         if not iface:
             raise RuntimeError("No se encontró interfaz de salida por defecto")
 
@@ -44,7 +58,6 @@ def get_default_interface_network(return_iface=False):
         }
 
         return iface if return_iface else (iface, network_info)
-
     except Exception as e:
         print(f"[!] Error obteniendo interfaz por defecto: {e}")
         if return_iface:
