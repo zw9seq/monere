@@ -49,6 +49,7 @@ To run Monere, you’ll need:
    cd monere
    ```
 2. **Configure the network interface**
+
    Edit the `docker-compose.yml` file and change the environment variable:
 
    ```yaml
@@ -60,14 +61,15 @@ To run Monere, you’ll need:
       - ./data:/app/data
    ```
 
-3. **Build and run the container**
+4. **Build and run the container**
 
    ```bash
    sudo docker compose build
    sudo docker compose up -d
    ```
 
-4. **Access the web UI**
+5. **Access the web UI**
+
    Open your browser and go to:
    👉 `http://<host-ip>:8000`
 
