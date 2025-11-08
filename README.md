@@ -56,7 +56,7 @@ To run Monere, you’ll need:
    container_name: monere_app
    network_mode: "host"
    environment:
-      - SNIFFER_IFACE=wlan0           # MODIFY THIS
+      - SNIFFER_IFACE=[INTERFACE]           # MODIFY THIS
    volumes:
       - ./data:/app/data
    ```
