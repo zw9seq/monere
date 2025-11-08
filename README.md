@@ -157,24 +157,6 @@ Monere combines multiple network inspection techniques to give you a full pictur
 
 ---
 
-## 🌟 Contributing
-
-Pull requests and feature suggestions are welcome!
-Feel free to open an issue or contribute improvements — especially UI enhancements or network integrations.
-
----
-
-## 🧩 Troubleshooting
-
-| Problem                       | Likely Cause                  | Solution                  |
-| ----------------------------- | ----------------------------- | ------------------------- |
-| App runs but no MACs detected | Container not in host network | Use `network_mode: host`  |
-| Permission denied errors      | Missing `NET_ADMIN` or root   | Add `cap_add` to compose  |
-| Can't access web UI           | Wrong IP or port              | Use host IP:8000          |
-| No devices found              | Network isolation or firewall | Ensure container sees LAN |
-
----
-
 ## 👤 Author
 
 **zw9seq**
