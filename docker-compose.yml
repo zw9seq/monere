@@ -5,6 +5,7 @@ services:
     network_mode: "host"
     environment:
       - SNIFFER_IFACE=[INTERFACE]           # MODIFY THIS
+      - TZ=[TIMEZONE]                       # MODIFY THIS
     volumes:
       - ./data:/app/data
       - ./oui.json:/app/data/oui.json
