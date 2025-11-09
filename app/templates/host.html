@@ -190,7 +190,7 @@
         <div class="flex flex-col gap-6 w-full lg:w-1/2">
 
           <!-- Acciones -->
-          <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700 h-48 flex flex-col">
+          <div class="bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700 h-6011 flex flex-col">
             <h2 class="text-xl font-semibold mb-4 text-yellow-400 flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M4 12h8m-8 5h16"/>
@@ -204,11 +204,20 @@
                 </svg>
                 Hacer Ping
               </button>
+
               <button onclick="startSnifferUI()" class="w-full flex items-center justify-center gap-2 bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A2 2 0 0122 9.618v4.764a2 2 0 01-2.447 1.894L15 14m0 0l-3 6m3-6L9 10m0 0L5.447 7.724A2 2 0 013 9.618v4.764a2 2 0 002.447 1.894L9 14z"/>
                 </svg>
                 Iniciar Sniffer
+              </button>
+
+              <button onclick="openDeleteHostModal('{{ network_id }}', '{{ mac }}')" 
+                      class="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-all duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                Eliminar Host
               </button>
             </div>
           </div>
@@ -283,6 +292,22 @@
             Detener sniffer
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- Modal eliminar host -->
+    <div id="deleteHostModal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50" onclick="closeIfBackdrop(event, 'deleteHostModal')">
+      <div class="bg-gray-800 p-6 rounded-xl shadow-lg w-80 text-center" onclick="event.stopPropagation()">
+        <h3 class="text-lg font-semibold text-red-400 mb-4">Eliminar host</h3>
+        <p class="text-gray-300 mb-6">
+          ¿Seguro que deseas eliminar este host de la red?
+        </p>
+        <form id="deleteHostForm" method="post">
+          <div class="flex justify-center gap-3">
+            <button type="button" onclick="closeDeleteHostModal()" class="px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-500 text-gray-200">Cancelar</button>
+            <button type="submit" class="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-400 text-black font-semibold">Eliminar</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -541,6 +566,58 @@
       // Tras cerrar el modal, refrescamos la página para que se actualice el estado del host
       location.reload();
     };
+
+    /* ---------------- */
+    /* ELIMINAR HOST    */
+    /* ---------------- */
+
+    function showModalById(id) {
+      const modal = document.getElementById(id);
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function hideModalById(id) {
+      const modal = document.getElementById(id);
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function openDeleteHostModal(networkId, mac) {
+      // Setear la acción del formulario y abrir modal (misma lógica que ping/sniffer)
+      const form = document.getElementById('deleteHostForm');
+      if (!form) {
+        console.error("deleteHostForm no encontrado en el DOM");
+        return;
+      }
+      form.action = `/network/${networkId}/host/${mac}/delete`;
+
+      // mostrar modal
+      showModalById('deleteHostModal');
+    }
+
+    function closeDeleteHostModal() {
+      hideModalById('deleteHostModal');
+    }
+
+    // Cerrar si se hace clic en el backdrop (el <div> del modal tiene onclick="closeIfBackdrop(...)")
+    function closeIfBackdrop(event, id) {
+      if (event.target && event.target.id === id) {
+        hideModalById(id);
+      }
+    }
+
+    // Cerrar con Escape (opcional — consistente con resto de UI)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        // asegúrate de listar aquí los modales que quieras cerrar con ESC
+        hideModalById('deleteHostModal');
+        hideModalById('snifferModal');
+        hideModalById('pingModal');
+      }
+    });
 
     /* ----------------------------- */
     /* GUARDAR NOTA DEL DISPOSITIVO */
