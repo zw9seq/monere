@@ -5,6 +5,12 @@ It’s designed for local network monitoring with a modern, minimal interface an
 
 ---
 
+## 📸 Screenshots
+
+![screenshot1](https://github.com/zw9seq/zw9seq/blob/main/Monere_Network.png)
+
+---
+
 ## 🚀 **Features**
 
 * 🕵️‍♂️ **Network Discovery** — Perform full subnet scans to identify active devices using **ICMP ping sweeps**.
@@ -145,16 +151,6 @@ Monere combines multiple network inspection techniques to give you a full pictur
 6. **Storage & Dashboard**
    All data (networks, hosts, scan results) is saved under `/data/`, ensuring persistence.
    The FastAPI backend serves an intuitive dashboard showing network activity, host details, and scan history.
-
----
-
-## 📸 Screenshots
-
-> *Add some screenshots of the dashboard and scan results here*
-
-```
-<PLACEHOLDER: Add image links or embeds>
-```
 
 ---
 
