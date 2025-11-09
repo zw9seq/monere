@@ -48,27 +48,28 @@ To run Monere, you’ll need:
    git clone https://github.com/zw9seq/monere.git
    cd monere
    ```
-2. **Configure the network interface**
+2. **Configure the variables**
 
-   Edit the `docker-compose.yml` file and change the environment variable:
+   Edit the `docker-compose.yml` file and change the environment variables:
 
    ```yaml
    container_name: monere_app
    network_mode: "host"
    environment:
-      - SNIFFER_IFACE=[INTERFACE]           # MODIFY THIS
+      - SNIFFER_IFACE=[INTERFACE]           # MODIFY THIS (e.g. SNIFFER_IFACE=eth0)
+      - TZ=[TIMEZONE]                       # MODIFY THIS (e.g. TZ=Europe/Paris)
    volumes:
       - ./data:/app/data
    ```
 
-4. **Build and run the container**
+3. **Build and run the container**
 
    ```bash
    sudo docker compose build
    sudo docker compose up -d
    ```
 
-5. **Access the web UI**
+4. **Access the web UI**
 
    Open your browser and go to:
    👉 `http://<host-ip>:8000`
