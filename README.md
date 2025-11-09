@@ -133,22 +133,19 @@ cap_add:
 
 Monere combines multiple network inspection techniques to give you a full picture of your LAN:
 
-1. **Network Identification**
-   Using `netifaces`, Monere automatically detects the system’s active interface and subnet (e.g., `192.168.1.0/24`).
+1. **ARP scanning**
+   The app runs a ARP scan in the background every ~15 seconds retrieving their **MAC addresses** and mapping it to a manufacturer via the **OUI database**.
 
 2. **Ping Sweep**
-   It performs a **parallel ICMP ping sweep** across the subnet to find active hosts quickly and efficiently.
+   You can perform a **parallel ICMP ping sweep** across the subnet to find active hosts quickly and efficiently.
 
-3. **ARP Resolution**
-   Once hosts respond, the app retrieves their **MAC addresses** using ARP requests, mapping each to a manufacturer via the **OUI database**.
-
-4. **Port Scanning (Nmap)**
+3. **Port Scanning (Nmap)**
    For each discovered host, Monere can run an **Nmap scan** to identify **open TCP/UDP ports** and detect services.
 
-5. **Packet Sniffing**
+4. **Packet Sniffing**
    The integrated sniffer (using Tcpdump) captures and inspects **real-time packets**, allowing monitoring of active network traffic from the web interface.
 
-6. **Storage & Dashboard**
+5. **Storage & Dashboard**
    All data (networks, hosts, scan results) is saved under `/data/`, ensuring persistence.
    The FastAPI backend serves an intuitive dashboard showing network activity, host details, and scan history.
 
