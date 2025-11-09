@@ -15,8 +15,8 @@ from .network import (
 )
 from .storage import (
     load_devices, save_devices, update_device,
-    create_network, list_networks, _load_all, get_network_cidr,
-    update_network, delete_network, refresh_all_device_statuses
+    create_network, list_networks, get_network_cidr,
+    update_network, delete_network, refresh_all_device_statuses, delete_host
 )
 
 # ================================================================
@@ -296,6 +296,14 @@ async def host_detail(request: Request, mac: str):
         "device": dev,
         "vendor": vendor
     })
+    
+# ================================================================
+# Borrar host
+# ================================================================
+@app.post("/network/{network_id}/host/{mac}/delete")
+async def delete_host_route(network_id: str, mac: str):
+    delete_host(network_id, mac)
+    return RedirectResponse(url=f"/network/{network_id}", status_code=303)
 
 # ================================================================
 # API Devices

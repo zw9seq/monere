@@ -211,6 +211,33 @@ def update_device(network_id: str,
 
     return dev
 
+def delete_host(network_id: str, mac: str):
+    """
+    Elimina un host específico de una red del archivo devices_<network_id>.json.
+    """
+    path = _devices_file(network_id)
+    if not os.path.exists(path):
+        print(f"[ADVERTENCIA] No existe el archivo de dispositivos para la red {network_id}")
+        return
+
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            devices = json.load(f)
+    except Exception as e:
+        print(f"[ERROR] No se pudo leer el archivo {path}: {e}")
+        return
+
+    if mac in devices:
+        devices.pop(mac)
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(devices, f, indent=2, ensure_ascii=False)
+            print(f"[INFO] Host {mac} eliminado correctamente de la red {network_id}")
+        except Exception as e:
+            print(f"[ERROR] No se pudo guardar el archivo tras eliminar el host: {e}")
+    else:
+        print(f"[INFO] No se encontró el host {mac} en la red {network_id}")
+
 def compute_device_status(dev: dict) -> str:
     """Devuelve 'online' si el dispositivo se ha visto en la última hora, 'offline' en caso contrario."""
     last_seen_str = dev.get("last_seen")
@@ -239,16 +266,9 @@ def refresh_all_device_statuses(network_id: str):
     if changed:
         save_devices(network_id, devices)
 
-# ---------------------------
-# Utilidades adicionales
-# ---------------------------
-
-def clear_devices(network_id: str):
-    save_devices(network_id, {})
-
 # Exportar nombres esperados por otros módulos
 __all__ = [
     "load_devices", "save_devices", "update_device",
     "list_networks", "create_network", "_load_all",
-    "get_network_cidr", "delete_device", "clear_devices"
+    "get_network_cidr"
 ]
