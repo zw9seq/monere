@@ -7,7 +7,10 @@ It’s designed for local network monitoring with a modern, minimal interface an
 
 ## 📸 Screenshots
 
-![screenshot1](https://github.com/zw9seq/zw9seq/blob/main/Monere_Network.png)
+![screenshot1](https://github.com/zw9seq/zw9seq/blob/b8beb9ec1e7509f97459a4b8057baf2cbf372801/misc/Nov09%3A%3A132136.png)
+![screenshot2](https://github.com/zw9seq/zw9seq/blob/b8beb9ec1e7509f97459a4b8057baf2cbf372801/misc/Nov21%3A%3A171036.png)
+![screenshot3](https://github.com/zw9seq/zw9seq/blob/b8beb9ec1e7509f97459a4b8057baf2cbf372801/misc/Nov09%3A%3A131926.png)
+![screenshot4](https://github.com/zw9seq/zw9seq/blob/b8beb9ec1e7509f97459a4b8057baf2cbf372801/misc/Nov09%3A%3A131841.png)
 
 ---
 
