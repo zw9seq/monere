@@ -8,7 +8,6 @@ services:
       - TZ=[TIMEZONE]                       # MODIFY THIS
     volumes:
       - ./data:/app/data
-      - ./oui.json:/app/data/oui.json
     cap_add:
       - NET_ADMIN
       - NET_RAW
